@@ -96,10 +96,14 @@
     :src img-src
     :on-mouse-down (mouse-down-builder item-cursor)}])
 
+(defn draggable-button-internal [button-text start-coord]
+  (let [item-cursor (reagent/atom start-coord)]
+    (fn [] (draggable-button button-text item-cursor))))
+
 (defn drag-page []
   (fn [] [:span.main
           [:h1 "Drag things"]
-          [draggable-button "Drag This" drag-foo-cursor]
+          [draggable-button-internal "Drag This" {:x 100 :y 100}]
           [draggable-button "Drag Other" drag-bar-cursor]
           [draggable-image "images/joe.jpeg" "Joe" drag-baz-cursor]
           [draggable-image "images/joyce.jpeg" "Joyce" drag-quux-cursor]
