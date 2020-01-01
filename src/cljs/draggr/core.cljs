@@ -8,7 +8,6 @@
    [accountant.core :as accountant])
   (:import [goog.events EventType]))
 
-
 (enable-console-print!)
 
 ;; -------------------------
@@ -24,7 +23,7 @@
     (:path (reitit/match-by-name router route params))
     (:path (reitit/match-by-name router route))))
 
-(path-for :about)
+(path-for :index)
 ;; -------------------------
 ;; Page components
 
@@ -35,20 +34,6 @@
      [:ul [:li [:a {:href (path-for :drag)} "Dragz"]]]]))
 
 ;; Drag items
-
-;; Drag State
-(def state-map {:foo  {:x 100 :y 100}
-                :bar  {:x 150 :y 150}
-                :baz  {:x 200 :y 200}
-                :quux {:x 250 :y 250}})
-
-(def drag-state (reagent/atom state-map))
-
-(def drag-foo-cursor (reagent/cursor drag-state [:foo]))
-(def drag-bar-cursor (reagent/cursor drag-state [:bar]))
-(def drag-baz-cursor (reagent/cursor drag-state [:baz]))
-(def drag-quux-cursor (reagent/cursor drag-state [:quux]))
-
 (defn get-client-rect [e]
   (let [r (.getBoundingClientRect (.-target e))]
     {:left (.-left r)
@@ -78,35 +63,35 @@
                      (mouse-up-builder on-move)))))
 
 ;; Draggable components
-(defn draggable-button [button-text item-cursor]
-  [:div
-   [:button.btn.btn-default
-    {:style {:position  "absolute"
-             :left      (str (:x @item-cursor) "px")
-             :top       (str (:y @item-cursor) "px")}
-     :on-mouse-down (mouse-down-builder item-cursor)}
-    button-text]])
-
-(defn draggable-image [img-src img-alt-text item-cursor]
-  [:img
-   {:style {:position  "absolute"
-            :left      (str (:x @item-cursor) "px")
-            :top       (str (:y @item-cursor) "px")}
-    :alt img-alt-text
-    :src img-src
-    :on-mouse-down (mouse-down-builder item-cursor)}])
-
-(defn draggable-button-internal [button-text start-coord]
+(defn draggable-button [button-text start-coord]
   (let [item-cursor (reagent/atom start-coord)]
-    (fn [] (draggable-button button-text item-cursor))))
+    (fn []
+      [:div
+       [:button.btn.btn-default
+        {:style {:position  "absolute"
+                 :left      (str (:x @item-cursor) "px")
+                 :top       (str (:y @item-cursor) "px")}
+         :on-mouse-down (mouse-down-builder item-cursor)}
+        button-text]])))
+
+(defn draggable-image [img-src img-alt-text start-coord]
+  (let [item-cursor (reagent/atom start-coord)]
+    (fn []
+      [:img
+       {:style {:position  "absolute"
+                :left      (str (:x @item-cursor) "px")
+                :top       (str (:y @item-cursor) "px")}
+        :src img-src
+        :alt img-alt-text
+        :on-mouse-down (mouse-down-builder item-cursor)}])))
 
 (defn drag-page []
   (fn [] [:span.main
           [:h1 "Drag things"]
-          [draggable-button-internal "Drag This" {:x 100 :y 100}]
-          [draggable-button "Drag Other" drag-bar-cursor]
-          [draggable-image "images/joe.jpeg" "Joe" drag-baz-cursor]
-          [draggable-image "images/joyce.jpeg" "Joyce" drag-quux-cursor]
+          [draggable-button "Drag This" {:x 100 :y 100}]
+          [draggable-button "Drag Other" {:x 150 :y 150}]
+          [draggable-image "images/joe.jpeg" "Joe" {:x 200 :y 200}]
+          [draggable-image "images/joyce.jpeg" "Joyce" {:x 250 :y 250}]
           ]))
 
 ;; -------------------------
