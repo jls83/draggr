@@ -14,6 +14,7 @@
      :top  (.-top r)}))
 
 (defn get-offset [e]
+  ; TODO: For whatever reason this is being weird with the `margin` property
   (let [client-rect (get-client-rect e)]
     {:x (- (.-clientX e) (:left client-rect))
      :y (- (.-clientY e) (:top client-rect))}))
