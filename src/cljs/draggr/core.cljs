@@ -13,44 +13,45 @@
     {:left (.-left r)
      :top  (.-top r)}))
 
-;; Event Handlers
+(defn get-offset [e]
+  (let [client-rect (get-client-rect e)]
+    {:x (- (.-clientX e) (:left client-rect))
+     :y (- (.-clientY e) (:top client-rect))}))
+
+;; Event Handler Builders
 (defn mouse-move-builder [offset cursor]
   (fn [e]
     (let [x (- (.-clientX e) (:x offset))
-          y (- (.-clientY e) (:y offset))]
-      (reset! cursor {:x x :y y}))))
+          y (- (.-clientY e) (:y offset))
+          new-cursor {:x x :y y}]
+      (reset! cursor new-cursor))))
 
-(defn mouse-up-builder [on-move]
+(defn mouse-up-builder [on-mouse-move]
   (fn [e]
-    (events/unlisten js/window EventType.MOUSEMOVE on-move)))
+    (events/unlisten js/window EventType.MOUSEMOVE on-mouse-move)))
 
 (defn mouse-down-builder [cursor]
   (fn [e]
     (.preventDefault e)
-    (let [{:keys [left top]} (get-client-rect e)
-          offset {:x (- (.-clientX e) left)
-                  :y (- (.-clientY e) top)}
-          on-move (mouse-move-builder offset cursor)]
-      (events/listen js/window EventType.MOUSEMOVE
-                     on-move)
-      (events/listen js/window EventType.MOUSEUP
-                     (mouse-up-builder on-move)))))
+    (let [on-mouse-move (mouse-move-builder (get-offset e) cursor)
+          on-mouse-up (mouse-up-builder on-mouse-move)]
+      (events/listen js/window EventType.MOUSEMOVE on-mouse-move)
+      (events/listen js/window EventType.MOUSEUP on-mouse-up))))
 
 ;; Draggable components
-(defn style-thing [item-cursor]
-  {:position  "absolute"
-   :left      (str (:x @item-cursor) "px")
-   :top       (str (:y @item-cursor) "px")})
-
 (defn drag-init [item-cursor]
-  {:style (style-thing item-cursor)
+  {:style {:position  "absolute"
+           :left      (str (:x @item-cursor) "px")
+           :top       (str (:y @item-cursor) "px")}
    :on-mouse-down (mouse-down-builder item-cursor)})
 
 (defn make-draggable
   [start-coord [tags attributes & body]]
     (let [item-cursor (reagent/atom start-coord)]
       (fn []
-        [tags (merge (drag-init item-cursor) attributes) body])))
+        ; TODO: I'm not sure why we can't have the result of `drag-init` saved in a `let`
+        ; binding, but...yeah
+        [tags (merge attributes (drag-init item-cursor)) body])))
 
 (defn drag-page []
   (fn [] [:span.main
