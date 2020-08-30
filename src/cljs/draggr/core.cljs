@@ -37,35 +37,28 @@
                      (mouse-up-builder on-move)))))
 
 ;; Draggable components
-(defn draggable-button [button-text start-coord]
-  (let [item-cursor (reagent/atom start-coord)]
-    (fn []
-      [:div
-       [:button.btn.btn-default
-        {:style {:position  "absolute"
-                 :left      (str (:x @item-cursor) "px")
-                 :top       (str (:y @item-cursor) "px")}
-         :on-mouse-down (mouse-down-builder item-cursor)}
-        button-text]])))
+(defn style-thing [item-cursor]
+  {:position  "absolute"
+   :left      (str (:x @item-cursor) "px")
+   :top       (str (:y @item-cursor) "px")})
 
-(defn draggable-image [img-src img-alt-text start-coord]
-  (let [item-cursor (reagent/atom start-coord)]
-    (fn []
-      [:img
-       {:style {:position  "absolute"
-                :left      (str (:x @item-cursor) "px")
-                :top       (str (:y @item-cursor) "px")}
-        :src img-src
-        :alt img-alt-text
-        :on-mouse-down (mouse-down-builder item-cursor)}])))
+(defn drag-init [item-cursor]
+  {:style (style-thing item-cursor)
+   :on-mouse-down (mouse-down-builder item-cursor)})
+
+(defn make-draggable
+  [start-coord [tags attributes & body]]
+    (let [item-cursor (reagent/atom start-coord)]
+      (fn []
+        [tags (merge (drag-init item-cursor) attributes) body])))
 
 (defn drag-page []
   (fn [] [:span.main
           [:h1 "Drag things"]
-          [draggable-button "Drag This" {:x 100 :y 100}]
-          [draggable-button "Drag Other" {:x 150 :y 150}]
-          [draggable-image "images/joe.jpeg" "Joe" {:x 200 :y 200}]
-          [draggable-image "images/joyce.jpeg" "Joyce" {:x 250 :y 250}]
+          [make-draggable {:x 100 :y 100} [:button.btn.btn-default {} "Drag This"]]
+          [make-draggable {:x 150 :y 150} [:button.btn.btn-default {} "Drag Other"]]
+          [make-draggable {:x 200 :y 200} [:img {:src "images/joe.jpeg" :alt "Joe"}]]
+          [make-draggable {:x 250 :y 250} [:img {:src "images/joyce.jpeg" :alt "Joyce"}]]
           ]))
 
 ;; -------------------------
