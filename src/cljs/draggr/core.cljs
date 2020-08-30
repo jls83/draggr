@@ -45,22 +45,36 @@
            :top       (str (:y @item-cursor) "px")}
    :on-mouse-down (mouse-down-builder item-cursor)})
 
-(defn make-draggable
-  [start-coord [tags attributes & body]]
-    (let [item-cursor (reagent/atom start-coord)]
-      (fn []
-        ; TODO: I'm not sure why we can't have the result of `drag-init` saved in a `let`
-        ; binding, but...yeah
-        [tags (merge attributes (drag-init item-cursor)) body])))
+(defn transform-hiccup-vec [[tag & others]]
+  (into [] 
+    (if (instance? PersistentArrayMap (first others))
+      ; TODO: Not sure if I should just return the values here? Or build it up earlier,
+      ; then concat later?
+      (concat [tag] others)
+      (concat [tag {}] others))))
+
+(defn make-draggable [start-coord hiccup-vec]
+  (let [item-cursor (reagent/atom start-coord)
+        [tags attributes & body] (transform-hiccup-vec hiccup-vec)]
+    (fn []
+      ; TODO: I'm not sure why we can't have the result of `drag-init` saved in a `let`
+      ; binding, but...yeah
+      [tags (merge attributes (drag-init item-cursor)) body])))
 
 (defn drag-page []
   (fn [] [:span.main
           [:h1 "Drag things"]
-          [make-draggable {:x 100 :y 100} [:button.btn.btn-default {} "Drag This"]]
-          [make-draggable {:x 150 :y 150} [:button.btn.btn-default {} "Drag Other"]]
-          [make-draggable {:x 200 :y 200} [:img {:src "images/joe.jpeg" :alt "Joe"}]]
-          [make-draggable {:x 250 :y 250} [:img {:src "images/joyce.jpeg" :alt "Joyce"}]]
-          ]))
+          [make-draggable {:x 100 :y 100} [:button.btn.btn-default "Drag This"]]
+          [make-draggable {:x 150 :y 150} [:button.btn.btn-default "Drag Other"]]
+          ; [make-draggable {:x 200 :y 200} [:img {:src "images/joe.jpeg" :alt "Joe"}]]
+          ; [make-draggable {:x 250 :y 250} [:img {:src "images/joyce.jpeg" :alt "Joyce"}]]
+          [make-draggable {:x 100 :y 100} [:p "Some text"]]
+          [make-draggable
+           {:x 400 :y 400}
+           [:ul
+            [:li "Item 1"]
+            [:li "Item 2"]
+            [:li "Item 3"]]]]))
 
 ;; -------------------------
 ;; Initialize app
